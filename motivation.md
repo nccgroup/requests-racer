@@ -133,6 +133,7 @@ print('outcomes:', *[resp.text.split()[-1] for resp in responses])
 ```
 
 ```python
+import time
 from synchronized_session import SynchronizedSession
 
 s = SynchronizedSession(10)
@@ -142,16 +143,20 @@ responses = [
     	'http://aleksejs.scripts.mit.edu/race.php',
     	files={'a': open('/tmp/{}kbytes'.format(n), 'rb')}
     )
-    for n in [1, 10, 100, 1000, 1000, 1000, 1000, 1000]
+    for n in [1, 1, 10, 10, 100, 100, 1000, 1000, 1000, 1000]
 ]
+
+# waiting a bit before finishing the requests seems to help with
+# timing consistency. why? no idea.
+time.sleep(1)
 
 s.finish_all()
 
 print('times:', *[resp.text.split()[1] for resp in responses])
 print('outcomes:', *[resp.text.split()[-1] for resp in responses])
 
-# times: 1562107122.8625 1562107122.8619 1562107122.8623 1562107122.8619 1562107122.8612 1562107122.8612 1562107122.8617 1562107123.0738
-# outcomes: success success success success success success success banned
+# times: 1562108650.5056 1562108650.6038 1562108650.604 1562108650.6038 1562108650.6038 1562108650.605 1562108650.6054 1562108650.6045 1562108650.6044 1562108650.6046
+# outcomes: success success success success success success success success success success
 ```
 
-The requests are all received by the backend within *less than 40ms* of each other in the GET example, and within *less than 10ms* in the POST example (I'm still figuring out what's wrong with that last one).
+The requests are all processed by the backend within less than *100ms* of each other, even when they have massively different sizes.
