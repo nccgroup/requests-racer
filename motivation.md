@@ -109,3 +109,49 @@ Plus the output has all of this useless garbage in it and the outputs from the d
 Running cURL in parallel synchronizes the time when the three requests will be *started*. But what you actually want to synchronize is the time when they *are sent completely* (and the server begins processing them). Because of network latency, synchronizing the former does not do a good job of synchronizing the latter, especially if your request payloads are large or differently-sized.
 
 The way to synchronize the time when the request is done being sent is to first send most of the request in a mostly completely unsynchronized fashion, then synchronize the moment when you begin sending the last byte of each request.
+
+Requests-Racer does this for you, while retaining the Requests API that you know and love:
+
+```python
+from synchronized_session import SynchronizedSession
+
+NUM_ATTEMPTS = 10
+
+s = SynchronizedSession(NUM_ATTEMPTS)
+
+responses = [
+    s.get('http://aleksejs.scripts.mit.edu/race.php') for _ in range(NUM_ATTEMPTS)
+]
+
+s.finish_all()
+
+print('times:', *[resp.text.split()[1] for resp in responses])
+print('outcomes:', *[resp.text.split()[-1] for resp in responses])
+
+# times: 1562107013.0464 1562107013.0501 1562107013.0631 1562107013.0755 1562107013.0786 1562107013.0718 1562107013.0651 1562107013.0701 1562107013.0649 1562107013.0817
+# outcomes: success success success success success success success success success success
+```
+
+```python
+from synchronized_session import SynchronizedSession
+
+s = SynchronizedSession(10)
+
+responses = [
+    s.post(
+    	'http://aleksejs.scripts.mit.edu/race.php',
+    	files={'a': open('/tmp/{}kbytes'.format(n), 'rb')}
+    )
+    for n in [1, 10, 100, 1000, 1000, 1000, 1000, 1000]
+]
+
+s.finish_all()
+
+print('times:', *[resp.text.split()[1] for resp in responses])
+print('outcomes:', *[resp.text.split()[-1] for resp in responses])
+
+# times: 1562107122.8625 1562107122.8619 1562107122.8623 1562107122.8619 1562107122.8612 1562107122.8612 1562107122.8617 1562107123.0738
+# outcomes: success success success success success success success banned
+```
+
+The requests are all received by the backend within *less than 40ms* of each other in the GET example, and within *less than 10ms* in the POST example (I'm still figuring out what's wrong with that last one).
