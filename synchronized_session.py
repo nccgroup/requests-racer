@@ -315,14 +315,20 @@ request. Here's what we know:
         time.sleep(1)
 
         # first, finish all the requests
-        finish_threads = [threading.Thread(target=self._finish_requests, args=(chunk,)) for chunk in chunks]
+        finish_threads = [
+            threading.Thread(target=self._finish_requests, args=(chunk,))
+            for chunk in chunks
+        ]
         for thread in finish_threads:
             thread.start()
         for thread in finish_threads:
             thread.join(timeout)
 
         # now, process the responses
-        resp_threads = [threading.Thread(target=self._process_responses, args=(chunk,)) for chunk in chunks]
+        resp_threads = [
+            threading.Thread(target=self._process_responses, args=(chunk,))
+            for chunk in chunks
+        ]
         for thread in resp_threads:
             thread.start()
         for thread in resp_threads:
