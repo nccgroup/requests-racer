@@ -1,4 +1,3 @@
-import multiprocessing
 import socket 
 import sys
 import threading
@@ -59,9 +58,6 @@ class SynchronizedAdapter(HTTPAdapter):
         super().__init__(*args, **kwargs)
 
         self._pending_requests = []
-
-        if num_threads is None:
-            num_threads = multiprocessing.cpu_count()
         self.num_threads = num_threads
 
     def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):
@@ -306,7 +302,13 @@ request. Here's what we know:
             # TODO closing connection
 
     def finish_all(self, timeout=None):
-        chunks = chunk(self._pending_requests, self.num_threads)
+        num_threads = self.num_threads
+        # if the number of threads was not specified by the user,
+        # or if they asked for more threads than we have requests, use one thread per request.
+        if (num_threads is None) or (num_threads > len(self._pending_requests)):
+            num_threads = len(self._pending_requests)
+
+        chunks = chunk(self._pending_requests, num_threads)
 
         # HACK: sleeping for a little before sending the requests seems to help
         # synchronize the requests a little better. why? no idea.

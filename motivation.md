@@ -117,7 +117,7 @@ from synchronized_session import SynchronizedSession
 
 NUM_ATTEMPTS = 10
 
-s = SynchronizedSession(NUM_ATTEMPTS)
+s = SynchronizedSession()
 
 responses = [
     s.get('http://aleksejs.scripts.mit.edu/race.php') for _ in range(NUM_ATTEMPTS)
@@ -136,7 +136,7 @@ print('outcomes:', *[resp.text.split()[-1] for resp in responses])
 import time
 from synchronized_session import SynchronizedSession
 
-s = SynchronizedSession(10)
+s = SynchronizedSession()
 
 responses = [
     s.post(
