@@ -77,7 +77,6 @@ class SynchronizedAdapter(HTTPAdapter):
         """
 
         # TODO: ensure no pooling happens here
-        # TODO: proxies?
         try:
             conn = self.get_connection(request.url, proxies)
         except LocationValueError as e:
