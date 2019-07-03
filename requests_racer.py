@@ -1,4 +1,4 @@
-import socket 
+import socket
 import sys
 import threading
 import time
@@ -53,7 +53,21 @@ def chunk(l, num_chunks):
         for i in range(num_chunks)
     ]
 
+
 class SynchronizedAdapter(HTTPAdapter):
+    """A custom adapter for Requests that lets the user submit multiple requests that
+    will be processed by their destination servers at approximately the same time.
+    This is accomplished by sending most, but not all, of the request when `.send()`
+    is called, and then exposing a `.finish_all()` method that finished all of the
+    pending requests. This relies on the fact that most web servers only star
+    processing a request after it has been received completely.
+
+    The fact that `.send()` does not finish the request breaks Requests' expectations
+    somewhat, because it expects `.send()` to return the server's response.
+    `SynchronizedAdapter` instead returns a dummy response object with status code
+    998. This object is then updated with the actual response after `.finish_all()`
+    is called.
+    """
     def __init__(self, num_threads=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -61,19 +75,8 @@ class SynchronizedAdapter(HTTPAdapter):
         self.num_threads = num_threads
 
     def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):
-        """Sends PreparedRequest object. Returns Response object.
-        :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.
-        :param stream: (optional) Whether to stream the request content.
-        :param timeout: (optional) How long to wait for the server to send
-            data before giving up, as a float, or a :ref:`(connect timeout,
-            read timeout) <timeouts>` tuple.
-        :type timeout: float or tuple or urllib3 Timeout object
-        :param verify: (optional) Either a boolean, in which case it controls whether
-            we verify the server's TLS certificate, or a string, in which case it
-            must be a path to a CA bundle to use
-        :param cert: (optional) Any user-provided SSL certificate to be trusted.
-        :param proxies: (optional) The proxies dictionary to apply to the request.
-        :rtype: requests.Response
+        """Follows `requests.HTTPAdapter.send()`, but does not send the last couple
+        of bytes, instead storing them in `self._pending_requests`.
         """
 
         # TODO: ensure no pooling happens here
@@ -123,7 +126,7 @@ class SynchronizedAdapter(HTTPAdapter):
 
                 if request.body is None:
                     # no body
-            
+
                     # MASSIVE HACK ALERT:
                     # at this point, *no* information has been sent to the server---it is buffered
                     # and will only be sent after we call low_conn.endheaders().
@@ -302,6 +305,11 @@ request. Here's what we know:
             # TODO closing connection
 
     def finish_all(self, timeout=None):
+        """Finishes all of the pending requests.
+
+        This function does not return anything. To access the responses, use the response
+        object that was originally returned when making the request.
+        """
         num_threads = self.num_threads
         # if the number of threads was not specified by the user,
         # or if they asked for more threads than we have requests, use one thread per request.
@@ -337,7 +345,12 @@ request. Here's what we know:
         # all done here
         self._pending_requests = []
 
+
 class SynchronizedSession(Session):
+    """A version of the Requests Session class that automatically creates a
+    `SynchronizedAdapter`, mounts it for HTTP[S], and exposes its `finish_all()`
+    method.
+    """
     def __init__(self, num_threads=None):
         super().__init__()
 
@@ -346,10 +359,16 @@ class SynchronizedSession(Session):
         self.mount('https://', self.adapter)
 
     def finish_all(self, *args, **kwargs):
+        """See `SynchronizedAdapter.finish_all()`."""
         self.adapter.finish_all(*args, **kwargs)
 
     @classmethod
     def from_requests_session(cls, other):
+        """Creates a `SynchronizedSession` from the provided `requests.Session`
+        object. Does not modify the original object, but does not perform a deep
+        copy either, so modifications to the returned `SynchronizedSession`
+        might affect the original session object as well, and vice versa.
+        """
         # this is a moderate HACK:
         # we use __getstate__() and __setstate__(), intended to help pickle
         # sessions, to get all of the state of the provided session and add
