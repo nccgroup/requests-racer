@@ -2,6 +2,7 @@ import multiprocessing
 import socket 
 import sys
 import threading
+import time
 import traceback
 
 from urllib3.poolmanager import PoolManager, proxy_from_url
@@ -306,6 +307,10 @@ request. Here's what we know:
 
     def finish_all(self):
         chunks = chunk(self._pending_requests, self.num_threads)
+
+        # HACK: sleeping for a little before sending the requests seems to help
+        # synchronize the requests a little better. why? no idea.
+        time.sleep(1)
 
         # first, finish all the requests
         finish_threads = [threading.Thread(target=self._finish_requests, args=(chunk,)) for chunk in chunks]

@@ -146,10 +146,6 @@ responses = [
     for n in [1, 1, 10, 10, 100, 100, 1000, 1000, 1000, 1000]
 ]
 
-# waiting a bit before finishing the requests seems to help with
-# timing consistency. why? no idea.
-time.sleep(1)
-
 s.finish_all()
 
 print('times:', *[resp.text.split()[1] for resp in responses])
