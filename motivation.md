@@ -113,7 +113,7 @@ The way to synchronize the time when the request is done being sent is to first 
 Requests-Racer does this for you, while retaining the Requests API that you know and love:
 
 ```python
-from synchronized_session import SynchronizedSession
+from requests_racer import SynchronizedSession
 
 NUM_ATTEMPTS = 10
 
@@ -134,7 +134,7 @@ print('outcomes:', *[resp.text.split()[-1] for resp in responses])
 
 ```python
 import time
-from synchronized_session import SynchronizedSession
+from requests_racer import SynchronizedSession
 
 s = SynchronizedSession()
 

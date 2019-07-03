@@ -1,4 +1,4 @@
-from synchronized_session import SynchronizedSession
+from requests_racer import SynchronizedSession
 
 s = SynchronizedSession(100)
 s.cookies.update({'session': 'asdf', 'gdpr_consent': 'no'})
