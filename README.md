@@ -1,6 +1,6 @@
 # Requests-Racer
 
-Requests-Racer is a small Python library that lets you use the [Requests library](https://requests.readthedocs.io/) to submit multiple requests that will be processed by their destination servers at approximately the same time, even if the requests have different destinations or have payloads of different sizes. (For an explanation of why you'd ever want to do such a thing, see [`motivation.md`](motivation.md).)
+Requests-Racer is a small Python library that lets you use the [Requests library](https://requests.readthedocs.io/) to submit multiple requests that will be processed by their destination servers at approximately the same time, even if the requests have different destinations or have payloads of different sizes. This can be helpful for detecting and exploiting race condition vulnerabilities in web applications. (For more information, see [`motivation.md`](motivation.md).)
 
 # Disclaimer
 
