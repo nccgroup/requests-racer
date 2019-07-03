@@ -305,7 +305,7 @@ request. Here's what we know:
 
             # TODO closing connection
 
-    def finish_all(self):
+    def finish_all(self, timeout=None):
         chunks = chunk(self._pending_requests, self.num_threads)
 
         # HACK: sleeping for a little before sending the requests seems to help
@@ -317,14 +317,14 @@ request. Here's what we know:
         for thread in finish_threads:
             thread.start()
         for thread in finish_threads:
-            thread.join()
+            thread.join(timeout)
 
         # now, process the responses
         resp_threads = [threading.Thread(target=self._process_responses, args=(chunk,)) for chunk in chunks]
         for thread in resp_threads:
             thread.start()
         for thread in resp_threads:
-            thread.join()
+            thread.join(timeout)
 
         # all done here
         self._pending_requests = []
@@ -351,5 +351,5 @@ class SynchronizedSession(Session):
         self.mount('http://', self.adapter)
         self.mount('https://', self.adapter)
 
-    def finish_all(self):
-        self.adapter.finish_all()
+    def finish_all(self, *args, **kwargs):
+        self.adapter.finish_all(*args, **kwargs)
