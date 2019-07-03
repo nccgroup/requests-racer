@@ -274,7 +274,7 @@ request. Here's what we know:
 
     def _process_responses(self, requests):
         for request, conn, _, response in requests:
-            if response.status_code == 999:
+            if (response.status_code == 999) or (response.status_code == 998):
                 # skip processing the response if we failed to finish the request
                 # in the first place.
                 continue
