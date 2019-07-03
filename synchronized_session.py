@@ -76,7 +76,8 @@ class SynchronizedAdapter(HTTPAdapter):
         :rtype: requests.Response
         """
 
-        # TODO{aleksejs}: ensure no pooling happens here
+        # TODO: ensure no pooling happens here
+        # TODO: proxies?
         try:
             conn = self.get_connection(request.url, proxies)
         except LocationValueError as e:
@@ -347,3 +348,7 @@ class SynchronizedSession(Session):
 
     def finish_all(self, *args, **kwargs):
         self.adapter.finish_all(*args, **kwargs)
+
+    def from_requests_session(self, other):
+        # TOOD implement
+        raise NotImplementedError()
