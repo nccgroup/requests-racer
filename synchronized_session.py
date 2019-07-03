@@ -1,6 +1,8 @@
 import multiprocessing
 import socket 
+import sys
 import threading
+import traceback
 
 from urllib3.poolmanager import PoolManager, proxy_from_url
 from urllib3.response import HTTPResponse
@@ -104,9 +106,8 @@ class SynchronizedAdapter(HTTPAdapter):
 
         # this is what we will return for now. this object will later be overwritten
         # after the request is finished.
-        dummy_response = Response()
-        dummy_response._content = b'TODO this is a dummy'
-        dummy_response._content_consumed = True
+        response = Response()
+        self.build_dummy_response_into(response, request)
 
         try:
             # Send the request.
@@ -144,7 +145,7 @@ class SynchronizedAdapter(HTTPAdapter):
 
                     low_conn._HTTPConnection__state = 'Request-sent'
 
-                    self._pending_requests.append((request, low_conn, b'\r\n\r\n', dummy_response))
+                    self._pending_requests.append((request, low_conn, b'\r\n\r\n', response))
                 else:
                     # some body, can end headers now
                     low_conn.endheaders()
@@ -156,7 +157,7 @@ class SynchronizedAdapter(HTTPAdapter):
                     if 'Content-Length' in request.headers:
                         # single body
                         low_conn.send(body[:-3])
-                        self._pending_requests.append((request, low_conn, body[-3:], dummy_response))
+                        self._pending_requests.append((request, low_conn, body[-3:], response))
                     else:
                         # chunked body
                         for i in request.body:
@@ -164,7 +165,7 @@ class SynchronizedAdapter(HTTPAdapter):
                             low_conn.send(b'\r\n')
                             low_conn.send(i)
                             low_conn.send(b'\r\n')
-                        self._pending_requests.append((request, low_conn, b'0\r\n\r\n', dummy_response))
+                        self._pending_requests.append((request, low_conn, b'0\r\n\r\n', response))
             except:
                 # If we hit any problems here, clean up the connection.
                 # Then, reraise so that we can handle the actual exception.
@@ -207,7 +208,7 @@ class SynchronizedAdapter(HTTPAdapter):
             else:
                 raise
 
-        return dummy_response
+        return response
 
     def build_response_into(self, response, req, urllib3_resp):
         """Same as requests.adapters.HTTPAdapter.build_response, but writes into a
@@ -236,29 +237,70 @@ class SynchronizedAdapter(HTTPAdapter):
         response.request = req
         response.connection = self
 
+    def build_dummy_response_into(self, response, req):
+        response.status_code = 998
+        response.encoding = 'UTF-8'
+        response.reason = 'Request Not Finished'
+
+        response._content = b'''This is a dummy response.
+You should not use responses from synchronized requests before calling
+the .finish_all() method of SynchronizedAdapter or SynchronizedSession.'''
+        response._content_consumed = True
+
+        response.request = req
+        response.connection = self
+
+    def build_exception_response_into(self, response, req, exc_info):
+        response.status_code = 999
+        response.encoding = 'UTF-8'
+        response.reason = 'Python Exception'
+
+        exception = ''.join(traceback.format_exception(*exc_info))
+        response._content = '''Exception occurred.
+An exception occurred while Requests-Racer was trying to finish this
+request. Here's what we know:
+
+{}'''.format(exception).encode('utf-8')
+        response._content_consumed = True
+
+        response.request = req
+        response.connection = self
+
     def _finish_requests(self, requests):
-        # TODO error handling
-        for _, conn, rest, _ in requests:
-            conn.send(rest)
+        for request, conn, rest, response in requests:
+            try:
+                conn.send(rest)
+            except:
+                # HACK: see below.
+                response.__init__()
+                self.build_exception_response_into(response, request, sys.exc_info())
 
     def _process_responses(self, requests):
-        # TODO error handling
         for request, conn, _, response in requests:
-            raw_response = conn.getresponse()
+            if response.status_code == 999:
+                # skip processing the response if we failed to finish the request
+                # in the first place.
+                continue
 
-            urllib3_reponse = HTTPResponse.from_httplib(
-                raw_response,
-                # pool=conn,
-                connection=conn,
-                preload_content=False,
-                decode_content=False
-            )
-
-            # HACK: we re-initialize the response that we originally handed out 
-            # to the user because there are a bunch of properties that cache various
-            # things and cleaning those up would be too much of a hassle.
-            response.__init__()
-            self.build_response_into(response, request, urllib3_reponse)
+            try:
+                raw_response = conn.getresponse()
+                urllib3_reponse = HTTPResponse.from_httplib(
+                    raw_response,
+                    # pool=conn, # TODO?
+                    connection=conn,
+                    preload_content=False,
+                    decode_content=False
+                )
+            except:
+                # HACK: see below.
+                response.__init__()
+                self.build_exception_response_into(response, request, sys.exc_info())
+            else:
+                # HACK: we re-initialize the response that we originally handed out
+                # to the user because there are a bunch of properties that cache various
+                # things and cleaning those up would be too much of a hassle.
+                response.__init__()
+                self.build_response_into(response, request, urllib3_reponse)
 
             # TODO closing connection
 
