@@ -62,7 +62,7 @@ Here are some caveats to keep in mind and fancier things you can do:
 - Requests made through a `SynchronizedAdapter` will *not* update the session object (e.g., cookies from `Set-Cookie` headers will not be added to the session's cookie jar).
 - Redirects might not be followed, try to avoid them.
 - If an exception occurs while starting a request, it will be re-raised exactly like with regular requests. However, if one occurs while finishing a request, it will not be re-raised. Instead, the response to the request will have status code `999` and contain a traceback in its `.text` attribute.
-- `SynchronizedSession.from_regular_session` constructs a `SynchronizedSession` from a `requests.Session` instance. This is helpful if you need to make some requests to establish some kind of state (e.g. log into a service and get a session cookie) that you'll need for the synchronized requests.
+- `SynchronizedSession.from_regular_session` constructs a `SynchronizedSession` from a `requests.Session` instance. This is helpful if you need to make some simple requests to e.g. log into a service and get a session cookie that you'll need for the synchronized requests.
 - `SynchronizedAdapter` and `SynchronizedSession` accept an optional parameter called `num_threads`, which gives the maximum number of threads the adapter will use. If not specified, the adapter will use one thread per request.
 - `finish_all()` accepts an optional parameter called `timeout`, which gives the maximum amount of time (in seconds) that the adapter will wait for a thread to finish.
 
