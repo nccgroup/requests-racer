@@ -329,20 +329,6 @@ request. Here's what we know:
         # all done here
         self._pending_requests = []
 
-    def _obtain_response(self, low_conn):
-        # Receive the response from the server
-        r = low_conn.getresponse()
-
-        resp = HTTPResponse.from_httplib(
-            r,
-            pool=conn,
-            connection=low_conn,
-            preload_content=False,
-            decode_content=False
-        )
-
-        return self.build_response(request, resp)
-
 class SynchronizedSession(Session):
     def __init__(self, num_threads=None):
         super().__init__()
