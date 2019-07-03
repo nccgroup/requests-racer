@@ -37,7 +37,7 @@ print(resp1.status_code)
 print(resp2.text)
 ```
 
-To make your code simpler, you can also use `SynchronizedSession`, which is just a `requests.Session` object that automatically mounts a `SynchronizedAdapter` for HTTP and HTTPS and proxies the `finish_all()` method, so the code above can be rewritten as follows:
+To make your code simpler, you can also use `SynchronizedSession`, which is just a `requests.Session` object that automatically mounts a `SynchronizedAdapter` for HTTP[S] and proxies the `finish_all()` method, so the code above can be rewritten as follows:
 
 ```python
 from requests_racer import SynchronizedSession
