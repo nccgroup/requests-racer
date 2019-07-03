@@ -348,6 +348,23 @@ class SynchronizedSession(Session):
     def finish_all(self, *args, **kwargs):
         self.adapter.finish_all(*args, **kwargs)
 
-    def from_requests_session(self, other):
-        # TOOD implement
-        raise NotImplementedError()
+    @classmethod
+    def from_requests_session(cls, other):
+        # this is a moderate HACK:
+        # we use __getstate__() and __setstate__(), intended to help pickle
+        # sessions, to get all of the state of the provided session and add
+        # it to the new one, throwing away the adapters since we don't want
+        # those to be overwritten.
+        # the output of __getstate__() is supposed to be an opaque blob that
+        # you aren't really supposed to inspect or modify, so this relies on
+        # specifics of the implementation of requests.Session that are not
+        # guaranteed to be stable.
+        session_state = other.__getstate__()
+
+        if 'adapters' in session_state:
+            del session_state['adapters']
+
+        new_session = cls()
+        new_session.__setstate__(session_state)
+
+        return new_session
