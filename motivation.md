@@ -29,7 +29,7 @@ You might try using Requests, but that will perform the calls in series, so thei
 >>> import requests
 >>> res = [requests.get('https://aleksejs.scripts.mit.edu/race.php') for _ in range(3)]
 >>> for req in res: print(req.text)
-... 
+...
 start: 1562013897.9938
 success
 
@@ -120,7 +120,7 @@ NUM_ATTEMPTS = 10
 s = SynchronizedSession()
 
 responses = [
-    s.get('http://aleksejs.scripts.mit.edu/race.php') for _ in range(NUM_ATTEMPTS)
+    s.get('https://aleksejs.scripts.mit.edu/race.php') for _ in range(NUM_ATTEMPTS)
 ]
 
 s.finish_all()
@@ -128,7 +128,7 @@ s.finish_all()
 print('times:', *[resp.text.split()[1] for resp in responses])
 print('outcomes:', *[resp.text.split()[-1] for resp in responses])
 
-# times: 1562107013.0464 1562107013.0501 1562107013.0631 1562107013.0755 1562107013.0786 1562107013.0718 1562107013.0651 1562107013.0701 1562107013.0649 1562107013.0817
+# times: 1562363494.288 1562363494.3031 1562363494.2941 1562363494.3054 1562363494.2977 1562363494.292 1562363494.2924 1562363494.3073 1562363494.2944 1562363494.3039
 # outcomes: success success success success success success success success success success
 ```
 
@@ -140,7 +140,7 @@ s = SynchronizedSession()
 
 responses = [
     s.post(
-    	'http://aleksejs.scripts.mit.edu/race.php',
+    	'https://aleksejs.scripts.mit.edu/race.php',
     	files={'a': open('/tmp/{}kbytes'.format(n), 'rb')}
     )
     for n in [1, 1, 10, 10, 100, 100, 1000, 1000, 1000, 1000]
@@ -151,8 +151,8 @@ s.finish_all()
 print('times:', *[resp.text.split()[1] for resp in responses])
 print('outcomes:', *[resp.text.split()[-1] for resp in responses])
 
-# times: 1562108650.5056 1562108650.6038 1562108650.604 1562108650.6038 1562108650.6038 1562108650.605 1562108650.6054 1562108650.6045 1562108650.6044 1562108650.6046
+# times: 1562363568.1738 1562363568.1745 1562363568.1751 1562363568.1747 1562363568.1738 1562363568.1753 1562363568.2005 1562363568.2007 1562363568.2005 1562363568.2039
 # outcomes: success success success success success success success success success success
 ```
 
-The requests are all processed by the backend within less than *100ms* of each other, even when they have massively different sizes.
+The requests are all processed by the backend within less than *30ms* of each other, even when they have massively different sizes.
