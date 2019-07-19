@@ -4,11 +4,9 @@ import threading
 import time
 import traceback
 
-from urllib3.poolmanager import PoolManager, proxy_from_url
+from urllib3.poolmanager import PoolManager
 from urllib3.response import HTTPResponse
-from urllib3.util import parse_url
 from urllib3.util import Timeout as TimeoutSauce
-from urllib3.util.retry import Retry
 from urllib3.exceptions import ClosedPoolError
 from urllib3.exceptions import ConnectTimeoutError
 from urllib3.exceptions import HTTPError as _HTTPError
@@ -25,14 +23,12 @@ from requests.adapters import DEFAULT_POOL_TIMEOUT, HTTPAdapter
 from requests.cookies import extract_cookies_to_jar
 from requests.exceptions import (
     ConnectionError, ConnectTimeout, ReadTimeout, SSLError,
-    ProxyError, RetryError, InvalidSchema, InvalidURL,
+    ProxyError, RetryError, InvalidURL,
 )
 from requests.models import Response
 from requests.structures import CaseInsensitiveDict
 from requests.sessions import Session
 from requests.utils import get_encoding_from_headers
-
-from http.client import _CS_REQ_SENT
 
 def chunk(l, num_chunks):
     """
