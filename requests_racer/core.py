@@ -1,5 +1,7 @@
-# This file contains modified parts of code from Kenneth Reitz's Requests,
-# available at https://github.com/kennethreitz/requests.
+# This file contains modified parts of code from the Requests library,
+# in particular the file requests/adapters.py as of commit
+# 7fd9267b3bab1d45f5e4ac0953629c5531ecbc55. The Requests library is
+# available at https://github.com/psf/requests.
 # The Requests code (but not the modifications present in Requests-Racer)
 # is distributed under the following license:
 #
