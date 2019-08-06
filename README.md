@@ -10,7 +10,20 @@ These hacks include messing with the private state of some urllib3 objects, so a
 
 # Installation
 
-TODO
+To use Requests-Racer, first create and activate a Python virtual environment:
+
+```
+python3 -m venv env
+source env/bin/activate
+```
+
+Then download a copy of the library and install it:
+
+```
+git clone TODO_REPO_URL
+cd requests_racer
+python setup.py install
+```
 
 # Usage
 
