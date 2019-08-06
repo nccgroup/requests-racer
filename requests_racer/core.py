@@ -53,6 +53,7 @@ from requests.structures import CaseInsensitiveDict
 from requests.sessions import Session
 from requests.utils import get_encoding_from_headers
 
+
 def chunk(l, num_chunks):
     """
     Splits l into num_chunks evenly-sized chunks.
@@ -66,26 +67,29 @@ def chunk(l, num_chunks):
     bigger_chunks = len(l) % num_chunks
 
     return [
-        (l[(chunk_size+1)*i : (chunk_size+1)*(i+1)]
+        (l[(chunk_size+1)*i:(chunk_size+1)*(i+1)]
          if (i < bigger_chunks)
-         else l[chunk_size*i+bigger_chunks : chunk_size*(i+1)+bigger_chunks])
+         else l[chunk_size*i+bigger_chunks:chunk_size*(i+1)+bigger_chunks])
         for i in range(num_chunks)
     ]
 
 
 class SynchronizedAdapter(HTTPAdapter):
-    """A custom adapter for Requests that lets the user submit multiple requests that
-    will be processed by their destination servers at approximately the same time.
-    This is accomplished by sending most, but not all, of the request when `.send()`
-    is called, and then exposing a `.finish_all()` method that finished all of the
-    pending requests. This relies on the fact that most web servers only star
-    processing a request after it has been received completely.
+    """A custom adapter for Requests that lets the user submit multiple
+    requests that will be processed by their destination servers at
+    approximately the same time.
 
-    The fact that `.send()` does not finish the request breaks Requests' expectations
-    somewhat, because it expects `.send()` to return the server's response.
-    `SynchronizedAdapter` instead returns a dummy response object with status code
-    998. This object is then updated with the actual response after `.finish_all()`
-    is called.
+    This is accomplished by sending most, but not all, of the request when
+    `.send()` is called, and then exposing a `.finish_all()` method that
+    finishes all of the pending requests. This relies on the fact that most web
+    servers only start processing a request after it has been received
+    completely.
+
+    The fact that `.send()` does not finish the request breaks Requests'
+    expectations somewhat, because it expects `.send()` to return the server's
+    response. `SynchronizedAdapter` instead returns a dummy response object
+    with status code 998. This object is then updated with the actual response
+    after `.finish_all()` is called.
     """
     def __init__(self, num_threads=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,9 +97,10 @@ class SynchronizedAdapter(HTTPAdapter):
         self._pending_requests = []
         self.num_threads = num_threads
 
-    def send(self, request, stream=False, timeout=None, verify=True, cert=None, proxies=None):
-        """Follows `requests.HTTPAdapter.send()`, but does not send the last couple
-        of bytes, instead storing them in `self._pending_requests`.
+    def send(self, request, stream=False, timeout=None, verify=True, cert=None,
+             proxies=None):
+        """Follows `requests.HTTPAdapter.send()`, but does not send the last
+        couple of bytes, instead storing them in `self._pending_requests`.
         """
 
         # TODO: ensure no pooling happens here
@@ -106,7 +111,8 @@ class SynchronizedAdapter(HTTPAdapter):
 
         self.cert_verify(conn, request.url, verify, cert)
         url = self.request_url(request, proxies)
-        self.add_headers(request, stream=stream, timeout=timeout, verify=verify, cert=cert, proxies=proxies)
+        self.add_headers(request, stream=stream, timeout=timeout,
+                         verify=verify, cert=cert, proxies=proxies)
 
         if isinstance(timeout, tuple):
             try:
@@ -123,8 +129,8 @@ class SynchronizedAdapter(HTTPAdapter):
         else:
             timeout = TimeoutSauce(connect=timeout, read=timeout)
 
-        # this is what we will return for now. this object will later be overwritten
-        # after the request is finished.
+        # this is what we will return for now. this object will later be
+        # overwritten after the request is finished.
         response = Response()
         self.build_dummy_response_into(response, request)
 
@@ -147,15 +153,17 @@ class SynchronizedAdapter(HTTPAdapter):
                     # no body
 
                     # MASSIVE HACK ALERT:
-                    # at this point, *no* information has been sent to the server---it is buffered
-                    # and will only be sent after we call low_conn.endheaders().
-                    # however, this request has no body, so calling low_conn.endheaders() would
-                    # actually cause the request to be processed by the server immediately.
-                    # endheaders() is the only public way to get the connection into a 'sent' state,
-                    # which is the only state in which you are allowed to read the response.
-                    # so we dig into the internals of the HTTPConnection object to get it into the
-                    # 'sent' state and send *most* of its internal buffer without sending the two
-                    # final newlines.
+                    # at this point, *no* information has been sent to the
+                    # server---it is buffered and will only be sent after we
+                    # call low_conn.endheaders(). however, this request has no
+                    # body, so calling low_conn.endheaders() would actually
+                    # cause the request to be processed by the server
+                    # immediately. endheaders() is the only public way to get
+                    # the connection into a 'sent' state, which is the only
+                    # state in which you are allowed to read the response. so
+                    # we dig into the internals of the HTTPConnection object to
+                    # get it into the 'sent' state and send *most* of its
+                    # internal buffer without sending the two final newlines.
 
                     # this follows HTTPConnection._send_output
                     msg = b"\r\n".join(low_conn._buffer)
@@ -164,7 +172,9 @@ class SynchronizedAdapter(HTTPAdapter):
 
                     low_conn._HTTPConnection__state = 'Request-sent'
 
-                    self._pending_requests.append((request, low_conn, b'\r\n\r\n', response))
+                    self._pending_requests.append(
+                        (request, low_conn, b'\r\n\r\n', response)
+                    )
                 else:
                     # some body, can end headers now
                     low_conn.endheaders()
@@ -176,7 +186,9 @@ class SynchronizedAdapter(HTTPAdapter):
                     if 'Content-Length' in request.headers:
                         # single body
                         low_conn.send(body[:-3])
-                        self._pending_requests.append((request, low_conn, body[-3:], response))
+                        self._pending_requests.append(
+                            (request, low_conn, body[-3:], response)
+                        )
                     else:
                         # chunked body
                         for i in request.body:
@@ -184,7 +196,9 @@ class SynchronizedAdapter(HTTPAdapter):
                             low_conn.send(b'\r\n')
                             low_conn.send(i)
                             low_conn.send(b'\r\n')
-                        self._pending_requests.append((request, low_conn, b'0\r\n\r\n', response))
+                        self._pending_requests.append(
+                            (request, low_conn, b'0\r\n\r\n', response)
+                        )
             except:
                 # If we hit any problems here, clean up the connection.
                 # Then, reraise so that we can handle the actual exception.
@@ -230,14 +244,16 @@ class SynchronizedAdapter(HTTPAdapter):
         return response
 
     def build_response_into(self, response, req, urllib3_resp):
-        """Same as requests.adapters.HTTPAdapter.build_response, but writes into a
-        provided requests.Response object instead of creating a new one.
+        """Same as requests.adapters.HTTPAdapter.build_response, but writes
+        into a provided requests.Response object instead of creating a new one.
         """
         # Fallback to None if there's no status_code, for whatever reason.
         response.status_code = getattr(urllib3_resp, 'status', None)
 
         # Make headers case-insensitive.
-        response.headers = CaseInsensitiveDict(getattr(urllib3_resp, 'headers', {}))
+        response.headers = CaseInsensitiveDict(
+            getattr(urllib3_resp, 'headers', {})
+        )
 
         # Set encoding.
         response.encoding = get_encoding_from_headers(response.headers)
@@ -292,13 +308,15 @@ request. Here's what we know:
             except:
                 # HACK: see below.
                 response.__init__()
-                self.build_exception_response_into(response, request, sys.exc_info())
+                self.build_exception_response_into(
+                    response, request, sys.exc_info()
+                )
 
     def _process_responses(self, requests):
         for request, conn, _, response in requests:
             if response.status_code == 999:
-                # skip processing the response if we failed to finish the request
-                # in the first place.
+                # skip processing the response if we failed to finish the
+                # request in the first place.
                 continue
 
             try:
@@ -313,11 +331,14 @@ request. Here's what we know:
             except:
                 # HACK: see below.
                 response.__init__()
-                self.build_exception_response_into(response, request, sys.exc_info())
+                self.build_exception_response_into(
+                    response, request, sys.exc_info()
+                )
             else:
-                # HACK: we re-initialize the response that we originally handed out
-                # to the user because there are a bunch of properties that cache various
-                # things and cleaning those up would be too much of a hassle.
+                # HACK: we re-initialize the response that we originally handed
+                # out to the user because there are a bunch of properties that
+                # cache various things and cleaning those up would be too much
+                # of a hassle.
                 response.__init__()
                 self.build_response_into(response, request, urllib3_reponse)
 
@@ -326,14 +347,15 @@ request. Here's what we know:
     def finish_all(self, timeout=None):
         """Finishes all of the pending requests.
 
-        This function does not return anything. To access the responses, use the response
-        object that was originally returned when making the request.
+        This function does not return anything. To access the responses, use
+        the response object that was originally returned when making the
+        request.
         """
-        num_threads = self.num_threads
-        # if the number of threads was not specified by the user,
-        # or if they asked for more threads than we have requests, use one thread per request.
-        if (num_threads is None) or (num_threads > len(self._pending_requests)):
-            num_threads = len(self._pending_requests)
+        num_threads = len(self._pending_requests)
+        # if the user has given a specific number of threads, use that unless
+        # it's higher than we need.
+        if self.num_threads is not None:
+            num_threads = min(num_threads, self.num_threads)
 
         chunks = chunk(self._pending_requests, num_threads)
 
@@ -367,8 +389,8 @@ request. Here's what we know:
 
 class SynchronizedSession(Session):
     """A version of the Requests Session class that automatically creates a
-    `SynchronizedAdapter`, mounts it for HTTP[S], and exposes its `finish_all()`
-    method.
+    `SynchronizedAdapter`, mounts it for HTTP[S], and exposes its
+    `finish_all()` method.
     """
     def __init__(self, num_threads=None):
         super().__init__()
@@ -384,9 +406,10 @@ class SynchronizedSession(Session):
     @classmethod
     def from_requests_session(cls, other):
         """Creates a `SynchronizedSession` from the provided `requests.Session`
-        object. Does not modify the original object, but does not perform a deep
-        copy either, so modifications to the returned `SynchronizedSession`
-        might affect the original session object as well, and vice versa.
+        object. Does not modify the original object, but does not perform a
+        deep copy either, so modifications to the returned
+        `SynchronizedSession` might affect the original session object as well,
+        and vice versa.
         """
         # this is a moderate HACK:
         # we use __getstate__() and __setstate__(), intended to help pickle
