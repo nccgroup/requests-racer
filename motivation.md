@@ -27,7 +27,7 @@ You might try using Requests, but that will perform the calls in series, so thei
 
 ```python
 >>> import requests
->>> res = [requests.get('https://aleksejs.scripts.mit.edu/race.php') for _ in range(3)]
+>>> res = [requests.get('https://example.com/race.php') for _ in range(3)]
 >>> for req in res: print(req.text)
 ...
 start: 1562013897.9938
@@ -46,11 +46,11 @@ you're banned
 You might try running mutiple instances of cURL in parallel, and that's a little better:
 
 ```
-aleksejs@aleksejs-T440s:~$ curl https://aleksejs.scripts.mit.edu/race.php \
-                         & curl https://aleksejs.scripts.mit.edu/race.php \
-                         & curl https://aleksejs.scripts.mit.edu/race.php \
-                         & curl https://aleksejs.scripts.mit.edu/race.php \
-                         & curl https://aleksejs.scripts.mit.edu/race.php
+aleksejs@aleksejs-T440s:~$ curl https://example.com/race.php \
+                         & curl https://example.com/race.php \
+                         & curl https://example.com/race.php \
+                         & curl https://example.com/race.php \
+                         & curl https://example.com/race.php
 [1] 25671
 [2] 25672
 [3] 25673
@@ -65,20 +65,20 @@ start: 1562015106.8786
 start: 1562015106.8795
 you're banned
 you're banned
-[1]   Done                    curl https://aleksejs.scripts.mit.edu/race.php
-[2]   Done                    curl https://aleksejs.scripts.mit.edu/race.php
-[3]-  Done                    curl https://aleksejs.scripts.mit.edu/race.php
-[4]+  Done                    curl https://aleksejs.scripts.mit.edu/race.php
+[1]   Done                    curl https://example.com/race.php
+[2]   Done                    curl https://example.com/race.php
+[3]-  Done                    curl https://example.com/race.php
+[4]+  Done                    curl https://example.com/race.php
 ```
 
 We've triggered the race once, but the rest of the requests arrived too late. And if you need to send large payloads of different sizes, you're going to have an even worse time:
 
 ```
-aleksejs@aleksejs-T440s:~$ curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/1kbytes" \
-                         & curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/10kbytes" \
-                         & curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/100kbytes" \
-                         & curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/1000kbytes" \
-                         & curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/1000kbytes"
+aleksejs@aleksejs-T440s:~$ curl https://example.com/race.php -d "@/tmp/1kbytes" \
+                         & curl https://example.com/race.php -d "@/tmp/10kbytes" \
+                         & curl https://example.com/race.php -d "@/tmp/100kbytes" \
+                         & curl https://example.com/race.php -d "@/tmp/1000kbytes" \
+                         & curl https://example.com/race.php -d "@/tmp/1000kbytes"
 [1] 25721
 [2] 25722
 [3] 25723
@@ -93,10 +93,10 @@ start: 1562015253.7403
 you're banned
 start: 1562015253.9519
 you're banned
-[1]   Done                    curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/1kbytes"
-[2]   Done                    curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/10kbytes"
-[3]-  Done                    curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/100kbytes"
-[4]+  Done                    curl https://aleksejs.scripts.mit.edu/race.php -d "@/tmp/1000kbytes"
+[1]   Done                    curl https://example.com/race.php -d "@/tmp/1kbytes"
+[2]   Done                    curl https://example.com/race.php -d "@/tmp/10kbytes"
+[3]-  Done                    curl https://example.com/race.php -d "@/tmp/100kbytes"
+[4]+  Done                    curl https://example.com/race.php -d "@/tmp/1000kbytes"
 
 ```
 
@@ -120,7 +120,7 @@ NUM_ATTEMPTS = 10
 s = SynchronizedSession()
 
 responses = [
-    s.get('https://aleksejs.scripts.mit.edu/race.php') for _ in range(NUM_ATTEMPTS)
+    s.get('https://example.com/race.php') for _ in range(NUM_ATTEMPTS)
 ]
 
 s.finish_all()
@@ -140,8 +140,8 @@ s = SynchronizedSession()
 
 responses = [
     s.post(
-    	'https://aleksejs.scripts.mit.edu/race.php',
-    	files={'a': open('/tmp/{}kbytes'.format(n), 'rb')}
+        'https://example.com/race.php',
+        files={'a': open('/tmp/{}kbytes'.format(n), 'rb')}
     )
     for n in [1, 1, 10, 10, 100, 100, 1000, 1000, 1000, 1000]
 ]
