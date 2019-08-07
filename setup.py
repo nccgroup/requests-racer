@@ -12,7 +12,7 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = 'requests-racer'
 DESCRIPTION = 'A Requests extension for exploiting race conditions in web applications.'
-URL = 'TODO'
+URL = 'https://github.com/nccgroup/requests-racer'
 EMAIL = 'aleksejs.popovs@nccgroup.com'
 AUTHOR = 'Aleksejs Popovs'
 REQUIRES_PYTHON = '>=3.6.0'

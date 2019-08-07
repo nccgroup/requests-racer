@@ -20,7 +20,7 @@ source env/bin/activate
 Then download a copy of the library and install it:
 
 ```
-git clone TODO_REPO_URL
+git clone https://github.com/nccgroup/requests-racer.git
 cd requests_racer
 python setup.py install
 ```
