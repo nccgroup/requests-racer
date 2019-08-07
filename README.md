@@ -21,7 +21,7 @@ Then download a copy of the library and install it:
 
 ```
 git clone https://github.com/nccgroup/requests-racer.git
-cd requests_racer
+cd requests-racer
 python setup.py install
 ```
 
