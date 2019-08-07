@@ -15,7 +15,7 @@ DESCRIPTION = 'A Requests extension for exploiting race conditions in web applic
 URL = 'https://github.com/nccgroup/requests-racer'
 EMAIL = 'aleksejs.popovs@nccgroup.com'
 AUTHOR = 'Aleksejs Popovs'
-REQUIRES_PYTHON = '>=3.6.0'
+REQUIRES_PYTHON = '>=3.5.0'
 VERSION = '0.0.1'
 
 REQUIRED = [

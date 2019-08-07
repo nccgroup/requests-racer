@@ -10,7 +10,7 @@ These hacks include messing with the private state of some urllib3 objects, so a
 
 # Installation
 
-To use Requests-Racer, first create and activate a Python virtual environment:
+To use Requests-Racer, you will need Python 3.5 or later. First, create and activate a Python virtual environment:
 
 ```
 python3 -m venv env
