@@ -79,6 +79,8 @@ Here are some caveats to keep in mind and fancier things you can do:
 - `SynchronizedAdapter` and `SynchronizedSession` accept an optional parameter called `num_threads`, which gives the maximum number of threads the adapter will use. If not specified, the adapter will use one thread per request.
 - `finish_all()` accepts an optional parameter called `timeout`, which gives the maximum amount of time (in seconds) that the adapter will wait for a thread to finish.
 
+See [`benchmark/`](benchmark/) for notes on performance.
+
 # License
 
 Copyright (C) 2019 Aleksejs Popovs, NCC Group
