@@ -23,7 +23,7 @@ REQUIRED = [
     # implementation details of requests and urllib3, here we specifically require
     # versions that are known to work.
     'requests==2.22.0',
-    'urllib3==1.25.3',
+    'urllib3==1.26.5',
 ]
 
 EXTRAS = {}
